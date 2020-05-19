@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Advances in Sequential Monte Carlo Methods</title>
+    <title>Accelerating sequential Monte Carlo with surrogate likelihoods</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
@@ -13,8 +13,8 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Advances in Sequential Monte Carlo Methods
-## PhD Confirmation Seminar<br><br>Joshua J Bon<br><br>April 9 2020<br><br><br><br>
+# Accelerating sequential Monte Carlo<br>with surrogate likelihoods
+## Joshua J Bon<br><br>MRC Biostatistics Unit<br><br>May 21 2020<br><br>
 ### Queensland University of Technology <br>ARC Centre of Excellence for Mathematical and Statistical Frontiers<br>QUT Centre for Data Science
 
 ---
@@ -38,23 +38,21 @@ padding: 0.25cm;
 
 ## Housekeeping
 
-- Slides available at: https://bonstats.github.io/confirm
+- Slides available at: https://bonstats.github.io/mrc-da-smc
 
-- Please save questions until of end presentation.
+- I will try to monitor questions as I go, you can alert me in the chat.
+
+- Please save long questions until of end presentation.
 
 
 ---
 class: list-space, list-nobullet
 
-## Confirmation of Candidature
+## Joint work
 
-- **Thesis Title**: "Advances in Sequential Monte Carlo Methods"
+A/Professor Christopher Drovandi, QUT and 
 
-- **Principal supervisor**: A/Professor Christopher Drovandi
-
-- **Associate supervisor**: Professor Tony Pettitt
-
-- **External supervisor**: A/Professor Anthony Lee
+A/Professor Anthony Lee, Bristol
 
 ---
 class: list-space
@@ -152,57 +150,6 @@ Monte Carlo techniques allow approximate posterior expectations with simulations
 `$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad \boldsymbol{\theta}_{i} \sim p(\boldsymbol{\theta}~\vert~\boldsymbol{y})$$`
 ]]
 
-
----
-
-## Monte Carlo techniques
-
-- Exact simulation
-
-    - Direct simulation
-    - Rejection sampling
-    
---
-
-- Markov chain Monte Carlo (MCMC)
-
-    - Markov chain with invariant distribution equal to posterior
-
---
-
-- Importance sampling (IS)
-
-    - Construct weighted samples to approximate posterior
-
---
-
-- Sequential Monte Carlo (SMC)
-
-    - Iterative importance sampling + 🌶
-
- 
----
-
-## Markov chain Monte Carlo
-
-Construct a Markov chain whose invariant distribution is the target distribution.
-
---
-
-`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad
-(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{\theta}_{i-1}) \sim K(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{\theta}_{i-1})$$`
-
---
-
-Although samples are correlated, expectations can be approximated to a desired precision.
-
---
-
-Popular kernels include:
- 
- - Metropolis-Hastings
- - Hamiltonian Monte Carlo
- - Metropolis-adjusted Langevin algorithm
 
 ---
 

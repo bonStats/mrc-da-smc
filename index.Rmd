@@ -1,6 +1,6 @@
 ---
-title: "Advances in Sequential Monte Carlo Methods"
-subtitle: "PhD Confirmation Seminar<br><br>Joshua J Bon<br><br>April 9 2020<br><br><br><br>"
+title: "Accelerating sequential Monte Carlo<br>with surrogate likelihoods"
+subtitle: "Joshua J Bon<br><br>MRC Biostatistics Unit<br><br>May 21 2020<br><br>"
 author: ""
 institute: ""
 date: "Queensland University of Technology <br>ARC Centre of Excellence for Mathematical and Statistical Frontiers<br>QUT Centre for Data Science"
@@ -157,23 +157,11 @@ knitr::opts_chunk$set(cache = T)
 
 ## Housekeeping
 
-- Slides available at: https://bonstats.github.io/confirm
+- Slides available at: https://bonstats.github.io/mrc-da-smc
 
-- Please save questions until of end presentation.
+- I will try to monitor questions as I go, you can alert me in the chat.
 
-
----
-class: list-space, list-nobullet
-
-## Confirmation of Candidature
-
-- **Thesis Title**: "Advances in Sequential Monte Carlo Methods"
-
-- **Principal supervisor**: A/Professor Christopher Drovandi
-
-- **Associate supervisor**: Professor Tony Pettitt
-
-- **External supervisor**: A/Professor Anthony Lee
+- Please save long questions until of end presentation.
 
 ---
 class: list-space
@@ -190,7 +178,7 @@ class: list-space
 
 5. Research tasks and progress so far
 
-6. Timeline
+Joint work with Christopher Drovandi (QUT) and Anthony Lee (Bristol University)
 
 ---
 class: list-space
@@ -256,72 +244,6 @@ $$p(\boldsymbol{y}) = \int_{\Theta}p(\boldsymbol{y}~\vert~\boldsymbol{\theta})p(
 In practice we only require posterior distribution summaries 
 $$\mathbb{E}_{p}[f(\boldsymbol{\theta})] = \int_{\Theta}f(\boldsymbol{\theta})p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\text{d}\boldsymbol{\theta}$$
 
---
-For example
-
-- Mean: $\mathbb{E}_{p}[\boldsymbol{\theta}]$
-- Variance: $\mathbb{E}_{p}[\boldsymbol{\theta}^2] - \mathbb{E}_{p}[\boldsymbol{\theta}]^2$
-- Probabilities/Quantiles:  $\mathbb{E}_{p}[1(\boldsymbol{\theta} <q)]$
-
---
-
-.full-width[.content-box-red[
-Monte Carlo techniques allow approximate posterior expectations with simulations
-
-$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad \boldsymbol{\theta}_{i} \sim p(\boldsymbol{\theta}~\vert~\boldsymbol{y})$$
-]]
-
-
----
-
-## Monte Carlo techniques
-
-- Exact simulation
-
-    - Direct simulation
-    - Rejection sampling
-    
---
-
-- Markov chain Monte Carlo (MCMC)
-
-    - Markov chain with invariant distribution equal to posterior
-
---
-
-- Importance sampling (IS)
-
-    - Construct weighted samples to approximate posterior
-
---
-
-- Sequential Monte Carlo (SMC)
-
-    - Iterative importance sampling + `r emo::ji("pepper")`
-
- 
----
-
-## Markov chain Monte Carlo
-
-Construct a Markov chain whose invariant distribution is the target distribution.
-
---
-
-$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad
-(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{\theta}_{i-1}) \sim K(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{\theta}_{i-1})$$
-
---
-
-Although samples are correlated, expectations can be approximated to a desired precision.
-
---
-
-Popular kernels include:
- 
- - Metropolis-Hastings
- - Hamiltonian Monte Carlo
- - Metropolis-adjusted Langevin algorithm
 
 ---
 
@@ -427,7 +349,7 @@ knitr::include_graphics("imgs/smc_algorithm.svg")
 ---
 class: inverse, center, middle, hide-logo
 
-# Motivation and aims
+# Motivation for surrogate likelihoods
 
 ---
 
@@ -470,44 +392,6 @@ Research on exploiting **SMC strengths**
 
 ---
 
-
-## Research aims 
-
-.full-width[.content-box-purple[
-**Aims**
-
-- Develop computationally efficient SMC algorithms
-- Investigate and test new mutation kernels
-- Exploit the population of particles to tune mutation kernels
-]]
-
---
-
-.full-width[.content-box-red[
-**Research streams**
-
-- S-SMC: Surrogate likelihoods in SMC
-- K-SMC: Improving mutation kernels for SMC
-- D-SMC: SMC with (approximate) likelihood gradients
-- Theory: Theoretical considerations
-]]
-
----
-class: inverse, center, middle, hide-logo
-
-# S-SMC: Surrogate likelihoods in SMC
-
----
-class: list-space
-
-## S-SMC: Surrogate likelihoods in SMC
-
-.full-width[.content-box-red[
-**Aim**: Utilise a surrogate likelihood in SMC when the model's likelihood is expensive
- to compute]]
-
---
-
 ### Contributions:
 
 --
@@ -515,39 +399,10 @@ class: list-space
 1. Tune delayed-acceptance kernel by optimising computation time
 
 --
-2. Calibration surrogate likelihoods within SMC
+2. Calibrating surrogate likelihoods within SMC
 
 --
 3. Surrogate first annealing strategy
-
----
-
-## Background: Metropolis-Hastings
-
-.full-width[.content-box-red[
-- MCMC method generates correlated posterior samples
-- No need for normalising constant (in most cases)
-]]
-
---
-
-1. **Propose** new location from $\boldsymbol{\theta}_{t-1}$ using $\boldsymbol{\theta}_{t}^{\prime} \sim q(\boldsymbol{\theta}~\vert~\boldsymbol{\theta}_{t-1})$
-
---
-
-2. Calculate **acceptance probability** $$\alpha = \min\left(1,\frac{p(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})q(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{\theta}_{t}^{\prime})}{p(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})q(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{\theta}_{t-1})} \right)$$
-
---
-
-3. **Evaluate** proposal
-
-  (a) Reject: $\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}$ with probability $1 - \alpha$, or
-  
-  (b) Accept: $\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t}^{\prime}$ with probability $\alpha$
-
---
-
-Generally we use several MH cycles to diversify particles
 
 ---
 class: middle, center
