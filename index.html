@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Advances in Sequential Monte Carlo Methods</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/hygge.css" rel="stylesheet" />
+    <link rel="stylesheet" href="bon-qut-campus-title.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Advances in Sequential Monte Carlo Methods
+## PhD Confirmation Seminar<br><br>Joshua J Bon<br><br>April 9 2020<br><br><br><br>
+### Queensland University of Technology <br>ARC Centre of Excellence for Mathematical and Statistical Frontiers<br>QUT Centre for Data Science
+
+---
+
+class: list-space
+
+&lt;style&gt;
+
+.list-space li {
+padding: 0.25cm;
+}
+
+.list-nobullet li {
+  list-style-type:none;
+}
+
+&lt;/style&gt;
+
+
+
+
+## Housekeeping
+
+- Slides available at: https://bonstats.github.io/confirm
+
+- Please save questions until of end presentation.
+
+
+---
+class: list-space, list-nobullet
+
+## Confirmation of Candidature
+
+- **Thesis Title**: "Advances in Sequential Monte Carlo Methods"
+
+- **Principal supervisor**: A/Professor Christopher Drovandi
+
+- **Associate supervisor**: Professor Tony Pettitt
+
+- **External supervisor**: A/Professor Anthony Lee
+
+---
+class: list-space
+
+## Talk outline
+
+1. Overview
+
+2. Computational Bayesian inference
+
+3. Sequential Monte Carlo
+
+4. Motivation and aims
+
+5. Research tasks and progress so far
+
+6. Timeline
+
+---
+class: list-space
+
+# Overview
+
+- Statistical modelling informs decision making under **uncertainty**
+
+
+
+- We use data to ensure models are **good approximations** of reality
+
+
+
+- Fitting or training models with data uses sophisticated **algorithms**
+
+
+
+- Focus is on algorithms for Bayesian models: **Sequential Monte Carlo**
+
+
+--
+&lt;br&gt;&lt;br&gt;
+**SMC:** 🎶 **Better. Faster. Stronger.** 🎶
+
+
+---
+
+## Bayesian inference
+
+Bayesian statistical inference uses posterior distributions
+`$$p(\boldsymbol{\theta}~\vert~\boldsymbol{y}) = \frac{p(\boldsymbol{y}~\vert~\boldsymbol{\theta})p(\boldsymbol{\theta})}{p(\boldsymbol{y})}$$`
+--
+
+.pull-left[
+The posterior is how we reason about:
+- uncertain parameters, `\(\boldsymbol{\theta}\)` 
+- observed data, `\(\boldsymbol{y}\)`
+]
+
+--
+
+.pull-right[
+Informed by:
+- The prior `\(p(\boldsymbol{\theta})\)` for `\(\boldsymbol{\theta}\)`
+- The likelihood `\(p(\boldsymbol{y}~\vert~\boldsymbol{\theta})\)` for `\(\boldsymbol{y}\)`
+]
+
+--
+
+.full-width[.content-box-red[
+`$$p(\boldsymbol{y}) = \int_{\Theta}p(\boldsymbol{y}~\vert~\boldsymbol{\theta})p(\boldsymbol{\theta}) \text{d}\boldsymbol{\theta}$$`
+
+- Intractable normalising constant
+- High dimensional integrals are difficult to solve analytically! 
+
+]]
+
+---
+
+## Computational Bayesian inference
+
+In practice we only require posterior distribution summaries 
+`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] = \int_{\Theta}f(\boldsymbol{\theta})p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\text{d}\boldsymbol{\theta}$$`
+
+--
+For example
+
+- Mean: `\(\mathbb{E}_{p}[\boldsymbol{\theta}]\)`
+- Variance: `\(\mathbb{E}_{p}[\boldsymbol{\theta}^2] - \mathbb{E}_{p}[\boldsymbol{\theta}]^2\)`
+- Probabilities/Quantiles:  `\(\mathbb{E}_{p}[1(\boldsymbol{\theta} &lt;q)]\)`
+
+--
+
+.full-width[.content-box-red[
+Monte Carlo techniques allow approximate posterior expectations with simulations
+
+`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad \boldsymbol{\theta}_{i} \sim p(\boldsymbol{\theta}~\vert~\boldsymbol{y})$$`
+]]
+
+
+---
+
+## Monte Carlo techniques
+
+- Exact simulation
+
+    - Direct simulation
+    - Rejection sampling
+    
+--
+
+- Markov chain Monte Carlo (MCMC)
+
+    - Markov chain with invariant distribution equal to posterior
+
+--
+
+- Importance sampling (IS)
+
+    - Construct weighted samples to approximate posterior
+
+--
+
+- Sequential Monte Carlo (SMC)
+
+    - Iterative importance sampling + 🌶
+
+ 
+---
+
+## Markov chain Monte Carlo
+
+Construct a Markov chain whose invariant distribution is the target distribution.
+
+--
+
+`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad
+(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{\theta}_{i-1}) \sim K(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{\theta}_{i-1})$$`
+
+--
+
+Although samples are correlated, expectations can be approximated to a desired precision.
+
+--
+
+Popular kernels include:
+ 
+ - Metropolis-Hastings
+ - Hamiltonian Monte Carlo
+ - Metropolis-adjusted Langevin algorithm
+
+---
+
+## Importance sampling
+
+Importance sampling is based on the identity:
+
+`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})]
+= \mathbb{E}_{g}\left[f(\boldsymbol{\theta})\frac{p(\boldsymbol{\theta}~\vert~\boldsymbol{y})}{g(\boldsymbol{\theta})}\right]$$`
+
+--
+
+For which the Monte Carlo approximation is:
+
+`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i})\frac{ p(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{y})}{g( \boldsymbol{\theta}_{i})}, \quad \boldsymbol{\theta}_{i} \sim g(\boldsymbol{\theta})$$`
+--
+
+The fundamental elements of importance sampling are
+.full-width[.content-box-red[
+`$$\begin{aligned}\text{Locations: }&amp; \qquad \boldsymbol{\theta}_{i} \sim g(\boldsymbol{\theta})\\
+\text{Weights: }&amp; \qquad  w_{i} = \frac{ p(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{y})}{g( \boldsymbol{\theta}_{i})}
+\end{aligned}$$`
+]]
+
+---
+
+## Importance sampling
+
+.content-box-red[
+**Importance sampling**: Draw from an approximate distribution, reweight to preserve the correct posterior expectation]
+
+--
+
+Wait! What about the normalising constant?
+
+--
+
+`$$w_{i} = \frac{ p(\boldsymbol{\theta}_{i}~\vert~\boldsymbol{y})}{g( \boldsymbol{\theta}_{i})}$$`
+
+--
+
+`$$w_{i} \propto W_{i} = \frac{ p(\boldsymbol{y}~\vert~\boldsymbol{\theta}_{i})p(\boldsymbol{\theta}_{i}) }{g( \boldsymbol{\theta}_{i})}$$`
+
+
+Self-normalise to avoid computing the constant: `$$w_{i} = \frac{W_{i}}{\sum_{i=1}^{N} W_{i}}$$`
+
+---
+
+## Sequential Monte Carlo
+
+Hard to develop an importance distribution `\(g(\boldsymbol{\theta})\)`! 
+
+ 🌶 Take a series of smaller steps.
+
+--
+
+- Choose a schedule to connect a tractable starting distribution `\(p_{0}(\boldsymbol{\theta})\)` to the posterior `\(p_{T}(\boldsymbol{\theta}) = p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\)`. For example
+
+`$$p_{t}(\boldsymbol{\theta}) = p_{0}(\boldsymbol{\theta})^{1-\gamma_{t}}p(\boldsymbol{\theta}~\vert~\boldsymbol{y})^{\gamma_{t}} \quad t = 1, 2, \ldots, T$$`
+
+--
+
+- With temperature schedule:
+
+`$$0 = \gamma_{0} &lt; \gamma_{1} &lt; \cdots &lt; \gamma_{T-1} &lt; \gamma_{T} = 1$$`
+
+--
+
+- Draw a sample from starting distribution `\(p_{0}(\boldsymbol{\theta})\)`.
+
+--
+
+.full-width[.content-box-red[**Problem**: The variance of the weights increases after each iteration]]
+
+---
+
+## Sequential Monte Carlo 
+
+To avoid particle degeneracy, after reweighting:
+
+--
+
+.full-width[.content-box-purple[
+🌶 **Resample**: Randomly select particles according to weight. 
+- Survival of the fittest.
+]]
+
+--
+
+.full-width[.content-box-red[
+🌶 **Refresh**: Mutate samples to avoid degeneracy in particles
+- Use MCMC kernels
+]]
+    
+---
+class: hide-logo
+
+Example SMC algorithm: Resample-move for static model
+&lt;img src="imgs/smc_algorithm.svg" width="650" style="display: block; margin: auto;" /&gt;
+
+---
+class: inverse, center, middle, hide-logo
+
+# Motivation and aims
+
+---
+
+## Motivation
+
+.pull-left[
+.content-box-purple[
+**Sequential Monte Carlo**
+
+- A robust inferential tool
+- Multimodality, intractability, dynamic models 
+]
+.content-box-red[
+
+**But** there is still
+- Less development than competitors
+- Performance lags behind leading MCMC
+]
+]
+
+--
+
+.pull-right[.content-box-purple[
+**Performance** depends on its components 
+
+- How well they adapt to a given problem
+- The mutation step of SMC is crucial
+]
+.content-box-red[
+Research on exploiting **SMC strengths**
+
+- Local adaptability 
+- Population of particles 
+]
+]
+
+--
+
+🎶 **Better. Faster. Stronger.** 🎶
+
+---
+
+
+## Research aims 
+
+.full-width[.content-box-purple[
+**Aims**
+
+- Develop computationally efficient SMC algorithms
+- Investigate and test new mutation kernels
+- Exploit the population of particles to tune mutation kernels
+]]
+
+--
+
+.full-width[.content-box-red[
+**Research streams**
+
+- S-SMC: Surrogate likelihoods in SMC
+- K-SMC: Improving mutation kernels for SMC
+- D-SMC: SMC with (approximate) likelihood gradients
+- Theory: Theoretical considerations
+]]
+
+---
+class: inverse, center, middle, hide-logo
+
+# S-SMC: Surrogate likelihoods in SMC
+
+---
+class: list-space
+
+## S-SMC: Surrogate likelihoods in SMC
+
+.full-width[.content-box-red[
+**Aim**: Utilise a surrogate likelihood in SMC when the model's likelihood is expensive
+ to compute]]
+
+--
+
+### Contributions:
+
+--
+
+1. Tune delayed-acceptance kernel by optimising computation time
+
+--
+2. Calibration surrogate likelihoods within SMC
+
+--
+3. Surrogate first annealing strategy
+
+---
+
+## Background: Metropolis-Hastings
+
+.full-width[.content-box-red[
+- MCMC method generates correlated posterior samples
+- No need for normalising constant (in most cases)
+]]
+
+--
+
+1. **Propose** new location from `\(\boldsymbol{\theta}_{t-1}\)` using `\(\boldsymbol{\theta}_{t}^{\prime} \sim q(\boldsymbol{\theta}~\vert~\boldsymbol{\theta}_{t-1})\)`
+
+--
+
+2. Calculate **acceptance probability** `$$\alpha = \min\left(1,\frac{p(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})q(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{\theta}_{t}^{\prime})}{p(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})q(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{\theta}_{t-1})} \right)$$`
+
+--
+
+3. **Evaluate** proposal
+
+  (a) Reject: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}\)` with probability `\(1 - \alpha\)`, or
+  
+  (b) Accept: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t}^{\prime}\)` with probability `\(\alpha\)`
+
+--
+
+Generally we use several MH cycles to diversify particles
+
+---
+class: middle, center
+
+What if `\(p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\)` is expensive to calculate?
+
+&lt;img src="imgs/judy_time_ticking.gif" width="468" height="352" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Background: Delayed-acceptance
+
+.full-width[.content-box-red[
+- Delayed-acceptance splits the MH algorithm into parts
+- Evaluate proposal using a cheap surrogate likelihood (or posterior)
+- Correct for approximation in a second evaluation
+]]
+
+--
+
+1. **Propose** new location from `\(\boldsymbol{\theta}_{t-1}\)` using `\(\boldsymbol{\theta}_{t}^{\prime} \sim q(\boldsymbol{\theta}~\vert~\boldsymbol{\theta}_{t-1})\)`
+    
+--
+
+2. Calculate **acceptance probability** (surrogate)* 
+
+`$$\alpha^{(1)} = \min\left(1,\frac{\tilde{p}(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})}{\tilde{p}(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})} \right)$$`
+
+where `\(\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})\)` is a cheap approximation of `\(p(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})\)`. 
+
+
+*MH ratio assumes symmetric proposal `\(q(\cdot,\cdot)\)` for simplicity.
+
+---
+
+## Background: Delayed-acceptance
+
+1. **Propose** new value...
+
+2. Calculate **acceptance probability** (surrogate)...
+
+--
+
+3. **Evaluate** proposal (surrogate)
+
+  (a) Reject: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}\)` with probability `\(1 - \alpha^{(1)}\)`, and
+
+  (b) Provisionally accept with probability `\(\alpha^{(1)}\)`
+
+--
+
+4. If provisionally accepted, calculate **acceptance probability** (full) 
+   `$$\alpha^{(2)} = \min\left(1,\frac{\tilde{p}(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})}{\tilde{p}(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})} \frac{p(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})}{p(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})}  \right)$$`
+--
+
+5. **Evaluate** proposal (full) 
+
+  (a) Reject: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}\)` with probability `\(1 - \alpha^{(2)}\)`, or
+
+  (b) Accept: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}\)` with probability `\(\alpha^{(2)}\)`
+
+
+---
+
+## Background: Adaptive delayed-acceptance in SMC
+
+- The proposal distribution `\(q_{\phi}(\boldsymbol{\theta}^{\prime}~\vert~\boldsymbol{\theta})\)` has tuning parameters `\(\phi\)`.
+
+--
+
+- DA is most efficient when big steps are taken
+  - lots of rejections, but a few big accepted jumps
+
+--
+
+- SMC can use a stopping criterion to determine number of cycles in the mutation step
+  - i.e. a diversification criterion
+
+--
+
+.full-width[.content-box-red[
+**Idea**: Select kernel tuning parameters by optimising computation time with respect to a diversification criterion
+]]
+
+---
+
+## Background: Diversification criteria
+
+After resampling, particles are duplicated. One such criterion uses the median of the expected jumping distances [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924):
+
+`$$D(k,\boldsymbol{\phi}) = \text{median}\left\{\sum_{s=1}^{k} J_{s}(\boldsymbol{\phi}) \right\}$$`
+- `\(k\)` is number of cycles in the mutation step
+
+- `\(J_{s}\)` is expected squared jumping distance (ESJD) (Mahalanobis distance)
+
+- Helps to ensure a sufficient amount of diversification
+
+---
+
+## Contribution: Optimising computation time
+
+Model for expected computation time of `\(k\)` delayed-acceptance iterations
+
+`$$C(k,\boldsymbol{\phi}) = k(L_{S} +  \alpha^{(1)}(\boldsymbol{\phi})L_{F})$$`
+
+- `\(L_{S}\)`: cost of surrogate likelihood 
+- `\(L_{F}\)`: cost of full likelihood
+- `\(\alpha^{(1)}(\phi)\)`: first stage acceptance for `\(\phi\)`
+
+--
+
+.full-width[.content-box-red[
+**Key idea**: Minimise computational costs subject to sufficient particle diversification
+]]
+
+---
+
+## Contribution: Optimising computation time
+
+Solve the following approximately
+
+`$$\arg \min_{\boldsymbol{\phi}} C(k,\boldsymbol{\phi})$$`
+`$$\text{such that } D(k,\boldsymbol{\phi}) &gt; d$$`
+
+--
+
+**Procedure**
+
+With fixed, finite tuning parameter test set, e.g. `\(\phi \in \{0.1, 0.5, 1.0\}\)` 
+
+--
+
+1. Run pilot mutation step to estimate:
+
+    - `\(\hat{L}_{S}\)`, `\(\hat{L}_{F}\)`, `\(\widehat{\alpha^{(1)}}(\phi)\)`:
+    - Minimum `\(k_{\phi}\)` using a model for `\(D(k,\boldsymbol{\phi})\)` (median inequality or Gamma distribution)
+--
+
+2. Find `\(\phi^{\star}\)` using estimates from pilot run
+
+--
+
+3. Run mutation steps until diversification criterion threshold is met
+
+---
+
+## Contribution: Calibrating the surrogate likelihood
+
+.full-width[.content-box-red[
+**Key idea**: Use location history of the particles to calibrate the surrogate likelihood (better match the full likelihood).
+]]
+
+--
+
+- Take `\(T_{\boldsymbol{\xi}}\)`, a pre-specified transformation with parameters `\(\boldsymbol{\xi}\)`
+
+--
+
+- Particle history: `\(H(L) = \{ (\boldsymbol{\theta}, L(\boldsymbol{y}~\vert~\boldsymbol{\theta})): L(\boldsymbol{y}~\vert~\boldsymbol{\theta}) \text{ has been evaluated at } \boldsymbol{\theta}\}.\)`
+
+--
+
+- Find `$$\boldsymbol{\xi}^{\star} = \min_{\boldsymbol{\xi}} \sum_{\boldsymbol{\theta} \in H(L)}d\left[ L(\boldsymbol{y}~\vert~\boldsymbol{\theta}), \tilde{L}(\boldsymbol{y}~\vert~T_{\boldsymbol{\xi}}(\boldsymbol{\theta}))\right]$$`
+
+--
+
+- `\(d\)` is some discrepancy measure, e.g. squares difference of the log-likelihoods
+
+--
+
+- Use a subset of the history, to reduce computational cost
+
+
+---
+## Contribution: Surrogate first annealing
+
+.full-width[.content-box-red[
+**Key idea**:
+Use two stages of annealing in SMC to eliminate unlikely particles early with low cost.
+]]
+
+--
+
+`$$p_{0}(\boldsymbol{\theta}) \rightarrow \tilde{p}(\boldsymbol{\theta}~\vert~\boldsymbol{y})^{\lambda} \rightarrow p(\boldsymbol{\theta}~\vert~\boldsymbol{y}), \quad 0 &lt; \lambda \leq 1$$`
+
+--
+
+| `\(\gamma_{t}\qquad\)` | `\(p_{t}(\boldsymbol{\theta})\)` |
+|--------------------------------------|----------------|
+| 0.0 | `\(p_{0}(\boldsymbol{\theta})\)` |
+| 0.5 | `\(p_{0}(\boldsymbol{\theta})^{0.5}\tilde{p}(\boldsymbol{\theta}~\vert~\boldsymbol{y})^{0.5\lambda}\)` |
+| 1.0 | `\(\tilde{p}(\boldsymbol{\theta}~\vert~\boldsymbol{y})^{\lambda}\)` |
+| 1.5 | `\(\tilde{p}(\boldsymbol{\theta}~\vert~\boldsymbol{y})^{0.5\lambda} p(\boldsymbol{\theta}~\vert~\boldsymbol{y})^{0.5}\)` |
+|  2.0 | `\(p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\)` |
+
+---
+class: list-space
+## S-SMC Contribution Recap
+
+Three strategies used:
+
+1. Delayed-acceptance
+    - Tuned with particles and computation optimisation
+2. Surrogate likelihood calibration
+    - Uses history of particles
+3. Surrogate first annealing
+    - Surrogate posterior is intermediate distribution
+
+---
+
+## Testing the strategies with simulations
+
+Run simulation to test optimisation framework
+
+- Number of particles: 1000 or 2000
+
+- Linear regression with `\(p = 5\)`
+
+- Full likelihood: Normal or student-t distribution df = 3 (with artificial delay)
+
+- Surrogate likelihood: Biased normal distribution
+
+- Ratio of full to surrogate cost: `\(\rho \in \{10^1,10^2,10^3,10^4,10^5,10^6\}\)`
+
+- Calibration using squared difference of surrogate and full log-likelihood (with regularisation)
+
+--
+
+**Test with combinations of SMC flavours**: 
+
+- DA = delayed-acceptance kernel
+- T = Transformation (surrogate calibration)
+- SFA = Surrogate first annealing
+
+---
+class: list-space
+
+## S-SMC Results: Overview
+
+- DA+T+SFA had the best *computation* time improvements
+   - speeding up the SMC by `\(1.90\times\)` to `\(6.95\times\)` compared to standard SMC. 
+
+--
+- DA+T+SFA had the best *efficiency* gains also 
+   - MSE `\(\times\)` SLE: gains of `\(2.20\times\)` to `\(7.71\times\)` 
+   - MSE `\(\times\)` time: gains of `\(1.86\times\)` to `\(8.30\times\)`
+
+--
+- Neither DA+T or SFA outperformed the other comprehensively
+
+--
+- DA+T+SFA has super-linear performance compared to DA+T or SFA alone
+
+---
+
+## S-SMC Results: Efficiency
+
+&lt;img src="index_files/figure-html/s-smc-eff-1.png" width="800px" height="500px" /&gt;
+---
+exclude: true
+
+## S-SMC Results: Surrogate evaluations
+
+&lt;img src="plots/surr-like-evals-2000-2020-02-13.png" width="90%" /&gt;
+
+---
+
+
+## S-SMC Results: Example posterior comparisons
+
+&lt;img src="index_files/figure-html/plot-post-1.png" width="800px" height="500px" /&gt;
+
+---
+class: list-space
+
+## S-SMC tasks
+
+
+1. ✅ Conduct a further literature review of delayed-acceptance methods in MCMC, SMC, and ABC-SMC.
+2. ✅ Write `R` package to implement generic SMC algorithms.
+3. ✅ Write `R` and `C++` code to fit models often used to test delayed-acceptance-type algorithms. 
+4. ✅ Identify potential surrogate posteriors with possible tuning parameters, and tuning mechanism(s).
+5. ✅ Test these surrogates and tuning mechanism(s) across appropriate testing models.
+6. 🚧 Apply methods to computationally expensive time series models 
+7. 🚧 Finish and submit paper "Delayed-acceptance sequential Monte Carlo"
+
+---
+class: inverse, middle, center, hide-logo
+
+# K-SMC: Improving mutation kernels for SMC
+
+---
+class: list-space
+
+## K-SMC: Improving mutation kernels for SMC
+
+.full-width[.content-box-red[
+**Aim**: Use mutation kernels in SMC that preserve the relative probability of the particle locations.
+]]
+
+--
+
+### Proposed contributions:
+
+--
+1. Investigate location-dependent kernel mixtures. In particular, extend independent-copula proposals [(South et al, 2019)](https://doi.org/10.1214/18-BA1129) with location dependence to better explore the posterior tails.
+
+--
+2. Investigate the mirror kernel for SMC.
+
+--
+3. Investigate extensions of the mirror kernel for SMC.
+
+---
+class: list-space
+
+## K-SMC tasks
+
+1. 🚧 Further literature review of mixed-kernel methods in MCMC.
+2. 🚧 Investigate mirror kernel for SMC.
+3. Detailed study of mixed-kernels in MCMC and SMC.
+4. 🚧 Identify groups of kernels that complement their counterparts' weaknesses. 
+5. Write `R` code to implement SMC with mixtures (or cycles) of the identified groups of kernels.
+6. Identify then test specific applications where the mixed-kernels may better explore tails of the posterior.
+7. Write and submit paper "Locally-adaptive mutation kernels in sequential Monte Carlo"
+
+---
+class: inverse, middle, center, hide-logo
+
+# D-SMC: (Approximate) likelihood gradients
+
+---
+class: list-space
+
+## D-SMC: (Approximate) likelihood gradients
+
+.full-width[.content-box-red[
+**Aim**: Use approximate derivative information in SMC to guide mutation step.
+]]
+
+--
+
+### Proposed contributions:
+
+--
+1. Investigate current shortcomings of adaptive SMC mutation kernels using (approximate) derivative information
+
+--
+2. Identify potential candidates for efficient (approximate) derivative-based mutation kernels. 
+
+--
+3. Test these kernels, including an approximate version of the Hug and Hop kernel [(Ludkin &amp; Sherlock, 2019)](https://arxiv.org/abs/1907.13570)
+
+---
+class: list-space
+
+## D-SMC tasks
+
+ 1. 🚧 Further literature review of methods which use or could use approximate derivatives in MCMC and SMC.
+ 2. 🚧  Identify or propose potential methods, e.g. approximate Hug and Hop kernel.
+ 3. Write `R` code to implement methods.
+ 4. Identify then test specific applications where these algorithms may reduce computation time or enable computation.
+ 5. Write and submit paper "Efficient and derivative-free posterior analysis with sequential Monte Carlo".
+
+---
+class: inverse, middle, center, hide-logo
+
+# Theory: Theoretical considerations
+
+---
+class: list-space
+
+## Theory: Theoretical considerations
+
+.full-width[.content-box-red[
+**Aim**: Expand theoretical results on properties of adaptive SMC, particularly those using adaptive mutation kernels.
+]]
+
+--
+
+### Proposed contributions:
+
+--
+1. Investigate if guarantees available in the literature are applicable to SMC algorithm with adaptive mirror kernel. If not, try to extend these [(e.g. Beskos et al, 2016)](http://dx.doi.org/10.1214/15-AAP1113)  
+
+--
+2. Investigate if guarantees are applicable to SMC with other adaptive mutation kernels used in the previous streams. If not, try to extend these guarantees.
+
+---
+class: list-space
+
+## Theory tasks
+
+1. 🚧 Literature review of current theoretical guarantees afforded to adaptive SMC algorithms.
+2. Identify adaptive SMC algorithms that are applicable or where progress is possible.
+3. Develop theory for adaptive SMC algorithms. Use SMC tuned mirror kernel as starting place.
+4. Write and submit paper "Guarantees for new adaptive Sequential Monte Carlo algorithms".
+
+
+
+---
+
+## Timeline 1
+
+
+
+&lt;img src="imgs/timeline-1-1.png" width="95%" /&gt;
+---
+
+## Timeline 2
+
+&lt;img src="imgs/timeline-2-1.png" width="95%" /&gt;
+---
+
+## Timeline 3
+
+&lt;img src="imgs/timeline-3-1.png" width="95%" /&gt;
+---
+
+## Acknowledgements
+
+Many thanks to the panel:
+  
+- Distinguished Professor Kerrie Mengersen
+
+- A/Professor Christopher Drovandi
+
+- Professor Michael Milford
+
+--
+
+Thank you to my supervisors:
+
+- A/Professor Christopher Drovandi
+
+- Professor Tony Pettitt
+
+- A/Professor Anthony Lee
+
+--
+
+Heartfelt thanks must also go to:
+
+- School of Mathematical Science at QUT
+
+- ACEMS at QUT
+
+- ACEMS at other nodes
+
+---
+class: middle, center
+
+# Thank you! (And questions)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  /* Replace <script> tags in slides area to make them executable
+   *
+   * Runs after post-processing of markdown source into slides and replaces only
+   * <script>s on the last slide of continued slides using the .has-continuation
+   * class added by xaringan. Finally, any <script>s in the slides area that
+   * aren't executed are commented out.
+   */
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container:not(.has-continuation) script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+  var scriptsNotExecuted = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container.has-continuation script'
+  );
+  if (!scriptsNotExecuted.length) return;
+  for (var i = 0; i < scriptsNotExecuted.length; i++) {
+    var comment = document.createComment(scriptsNotExecuted[i].outerHTML)
+    scriptsNotExecuted[i].parentElement.replaceChild(comment, scriptsNotExecuted[i])
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+<style>
+.logo {
+  background-image: url(imgs/acems-qut-logo.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  width: 370px;
+  height: 100px;
+  z-index: 0;
+}
+</style>
+
+<script>
+document
+  .querySelectorAll(
+    '.remark-slide-content' +
+    ':not(.title-slide)' +
+    // add additional classes to exclude here, e.g.
+    // ':not(.inverse)' +
+    ':not(.hide-logo)'
+  )
+  .forEach(el => {
+    el.innerHTML += '<div class="logo"></div>';
+  });
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
