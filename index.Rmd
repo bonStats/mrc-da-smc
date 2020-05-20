@@ -153,7 +153,7 @@ facet_label_gamma <-  function(x){
 
 knitr::opts_chunk$set(cache = T)
 
-# TODO: Add tuning model details, add comp time aside, add new calibration technique
+# TODO: Add tuning model details, add comp time aside, result of whittle
 
 ```
 
@@ -545,6 +545,13 @@ With fixed, finite tuning parameter test set, e.g. $\phi \in \{0.1, 0.5, 1.0\}$
 
 ## Aside: Optimising computation time
 
+Using the same optimisation strategy,
+
+$$\arg \min_{\boldsymbol{\phi}} C(k,\boldsymbol{\phi})$$
+$$\text{such that } D(k,\boldsymbol{\phi}) > d,$$
+
+in the context of standard Metropolis-Hastings can justify some of the tuning strategies in the literature.
+
 ---
 class: inverse, center, middle, hide-logo
 
@@ -557,10 +564,12 @@ class: inverse, center, middle, hide-logo
 ## Calibrating the surrogate likelihood
 
 .full-width[.content-box-red[
-**Key idea**: Use location history of the particles to calibrate the surrogate likelihood (better match the full likelihood).
+**Key idea**: Use current location or location history of the particles to calibrate the surrogate likelihood (better match the full likelihood).
 ]]
 
 --
+
+**Location-scale transformation**
 
 - Take $T_{\boldsymbol{\xi}}$, a pre-specified transformation with parameters $\boldsymbol{\xi}$
 
@@ -579,6 +588,21 @@ class: inverse, center, middle, hide-logo
 --
 
 - Use a subset of the history, to reduce computational cost
+
+---
+## Calibrating the surrogate likelihood
+
+**Temperature weighting**
+
+For surrogate likelihoods that can be factorised
+
+- e.g. $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})$
+
+- Let $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta},\boldsymbol{\omega}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})^{\omega_{i}}$
+
+-  Find $$\boldsymbol{\omega}^{\star} = \min_{\boldsymbol{\omega}} \sum_{\boldsymbol{\theta} \in H(L)}d\left[ L(\boldsymbol{y}~\vert~\boldsymbol{\theta}), \tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}, \boldsymbol{\omega})\right] + \lambda \Vert\boldsymbol{\omega}\Vert_{1}$$
+
+- If $d$ is squared difference of the log-likelihoods, this is equivalent to the standard Lasso
 
 ---
 class: inverse, center, middle, hide-logo
