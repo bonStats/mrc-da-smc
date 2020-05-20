@@ -153,6 +153,8 @@ facet_label_gamma <-  function(x){
 
 knitr::opts_chunk$set(cache = T)
 
+# TODO: Add tuning model details, add comp time aside, add new calibration technique
+
 ```
 
 ## Housekeeping
@@ -168,17 +170,17 @@ class: list-space
 
 ## Talk outline
 
-1. Overview
+1. Overview: Computational Bayesian inference & SMC
 
-2. Computational Bayesian inference
+2. Tuning delayed-acceptance in SMC
 
-3. Sequential Monte Carlo
+3. Calibrating surrogate likelihoods in SMC
 
-4. Motivation and aims
+4. Surrogate first annealing strategy
 
-5. Research tasks and progress so far
+5. Simulation results 
 
-Joint work with Christopher Drovandi (QUT) and Anthony Lee (Bristol University)
+Joint work with **Christopher Drovandi** (QUT) and **Anthony Lee** (Bristol University)
 
 ---
 class: list-space
@@ -244,6 +246,30 @@ $$p(\boldsymbol{y}) = \int_{\Theta}p(\boldsymbol{y}~\vert~\boldsymbol{\theta})p(
 In practice we only require posterior distribution summaries 
 $$\mathbb{E}_{p}[f(\boldsymbol{\theta})] = \int_{\Theta}f(\boldsymbol{\theta})p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\text{d}\boldsymbol{\theta}$$
 
+--
+
+- Exact simulation
+
+    - Direct simulation
+    - Rejection sampling
+    
+--
+
+- Markov chain Monte Carlo (MCMC)
+
+    - Markov chain with invariant distribution equal to posterior
+
+--
+
+- Importance sampling (IS)
+
+    - Construct weighted samples to approximate posterior
+
+--
+
+- Sequential Monte Carlo (SMC)
+
+    - Iterative importance sampling + `r emo::ji("pepper")`
 
 ---
 
@@ -335,7 +361,7 @@ To avoid particle degeneracy, after reweighting:
 
 .full-width[.content-box-red[
 `r emo::ji("pepper")` **Refresh**: Mutate samples to avoid degeneracy in particles
-- Use MCMC kernels
+- Often use MCMC kernels
 ]]
     
 ---
@@ -349,60 +375,26 @@ knitr::include_graphics("imgs/smc_algorithm.svg")
 ---
 class: inverse, center, middle, hide-logo
 
-# Motivation for surrogate likelihoods
+# Using surrogate likelihoods in SMC:
+
+## Delayed-acceptance
+
 
 ---
+class: list-space
+## Background: Delayed-acceptance
 
-## Motivation
+One option for the refresh (mutation) step in SMC is a Metropolis-Hastings kernel.
 
-.pull-left[
-.content-box-purple[
-**Sequential Monte Carlo**
-
-- A robust inferential tool
-- Multimodality, intractability, dynamic models 
-]
-.content-box-red[
-
-**But** there is still
-- Less development than competitors
-- Performance lags behind leading MCMC
-]
-]
+1. Propose new location for particle from proposal distribution
+2. Calculate acceptance rate
+3. Accept/reject proposal
 
 --
 
-.pull-right[.content-box-purple[
-**Performance** depends on its components 
-
-- How well they adapt to a given problem
-- The mutation step of SMC is crucial
-]
-.content-box-red[
-Research on exploiting **SMC strengths**
-
-- Local adaptability 
-- Population of particles 
-]
-]
-
---
-
-`r emo::ji("notes")` **Better. Faster. Stronger.** `r emo::ji("notes")`
-
----
-
-### Contributions:
-
---
-
-1. Tune delayed-acceptance kernel by optimising computation time
-
---
-2. Calibrating surrogate likelihoods within SMC
-
---
-3. Surrogate first annealing strategy
+.full-width[.content-box-red[
+**Computational cost**: Likelihood (posterior) evaluation at proposal.
+]]
 
 ---
 class: middle, center
@@ -469,7 +461,7 @@ where $\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})$ is a cheap appro
 
 ---
 
-## Background: Adaptive delayed-acceptance in SMC
+## Adaptive delayed-acceptance in SMC
 
 - The proposal distribution $q_{\phi}(\boldsymbol{\theta}^{\prime}~\vert~\boldsymbol{\theta})$ has tuning parameters $\phi$.
 
@@ -491,7 +483,7 @@ where $\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})$ is a cheap appro
 
 ---
 
-## Background: Diversification criteria
+## Diversification criteria
 
 After resampling, particles are duplicated. One such criterion uses the median of the expected jumping distances [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924):
 
@@ -504,7 +496,7 @@ $$D(k,\boldsymbol{\phi}) = \text{median}\left\{\sum_{s=1}^{k} J_{s}(\boldsymbol{
 
 ---
 
-## Contribution: Optimising computation time
+## Optimising computation time
 
 Model for expected computation time of $k$ delayed-acceptance iterations
 
@@ -522,7 +514,7 @@ $$C(k,\boldsymbol{\phi}) = k(L_{S} +  \alpha^{(1)}(\boldsymbol{\phi})L_{F})$$
 
 ---
 
-## Contribution: Optimising computation time
+## Optimising computation time
 
 Solve the following approximately
 
@@ -551,7 +543,18 @@ With fixed, finite tuning parameter test set, e.g. $\phi \in \{0.1, 0.5, 1.0\}$
 
 ---
 
-## Contribution: Calibrating the surrogate likelihood
+## Aside: Optimising computation time
+
+---
+class: inverse, center, middle, hide-logo
+
+# Using surrogate likelihoods in SMC:
+
+## Calibrating the surrogate likelihood
+
+---
+
+## Calibrating the surrogate likelihood
 
 .full-width[.content-box-red[
 **Key idea**: Use location history of the particles to calibrate the surrogate likelihood (better match the full likelihood).
@@ -571,15 +574,21 @@ With fixed, finite tuning parameter test set, e.g. $\phi \in \{0.1, 0.5, 1.0\}$
 
 --
 
-- $d$ is some discrepancy measure, e.g. squares difference of the log-likelihoods
+- $d$ is some discrepancy measure, e.g. squared difference of the log-likelihoods
 
 --
 
 - Use a subset of the history, to reduce computational cost
 
+---
+class: inverse, center, middle, hide-logo
+
+# Using surrogate likelihoods in SMC:
+
+## Surrogate first annealing
 
 ---
-## Contribution: Surrogate first annealing
+## Surrogate first annealing
 
 .full-width[.content-box-red[
 **Key idea**:
@@ -602,7 +611,7 @@ $$p_{0}(\boldsymbol{\theta}) \rightarrow \tilde{p}(\boldsymbol{\theta}~\vert~\bo
 
 ---
 class: list-space
-## S-SMC Contribution Recap
+## Recap
 
 Three strategies used:
 
@@ -642,7 +651,7 @@ Run simulation to test optimisation framework
 ---
 class: list-space
 
-## S-SMC Results: Overview
+## Results: Overview
 
 - DA+T+SFA had the best *computation* time improvements
    - speeding up the SMC by $1.90\times$ to $6.95\times$ compared to standard SMC. 
@@ -660,7 +669,7 @@ class: list-space
 
 ---
 
-## S-SMC Results: Efficiency
+## Results: Efficiency
 
 ```{r s-smc-eff, echo = F, eval = T, cache = T, out.width = '800px', out.height='500px', fig.width = 16, fig.height=10}
 
@@ -695,7 +704,7 @@ eff_l_evals %>%
 ---
 exclude: true
 
-## S-SMC Results: Surrogate evaluations
+## Results: Surrogate evaluations
 
 ```{r plot-surr, echo = FALSE, out.width='90%', }
 knitr::include_graphics("plots/surr-like-evals-2000-2020-02-13.png")
@@ -704,7 +713,7 @@ knitr::include_graphics("plots/surr-like-evals-2000-2020-02-13.png")
 ---
 
 
-## S-SMC Results: Example posterior comparisons
+## Results: Example posterior comparisons
 
 ```{r plot-post, echo = FALSE, out.width = '800px', out.height='500px', fig.width = 16, fig.height=10}
 
@@ -757,198 +766,6 @@ pdensity_ind %>% filter(bss_model == "median", n_particles == 2000, iter == it,
           legend.position = "bottom")
 
 ```
-
----
-class: list-space
-
-## S-SMC tasks
-
-
-1. `r emo::ji("check")` Conduct a further literature review of delayed-acceptance methods in MCMC, SMC, and ABC-SMC.
-2. `r emo::ji("check")` Write `R` package to implement generic SMC algorithms.
-3. `r emo::ji("check")` Write `R` and `C++` code to fit models often used to test delayed-acceptance-type algorithms. 
-4. `r emo::ji("check")` Identify potential surrogate posteriors with possible tuning parameters, and tuning mechanism(s).
-5. `r emo::ji("check")` Test these surrogates and tuning mechanism(s) across appropriate testing models.
-6. `r emo::ji("construction")` Apply methods to computationally expensive time series models 
-7. `r emo::ji("construction")` Finish and submit paper "Delayed-acceptance sequential Monte Carlo"
-
----
-class: inverse, middle, center, hide-logo
-
-# K-SMC: Improving mutation kernels for SMC
-
----
-class: list-space
-
-## K-SMC: Improving mutation kernels for SMC
-
-.full-width[.content-box-red[
-**Aim**: Use mutation kernels in SMC that preserve the relative probability of the particle locations.
-]]
-
---
-
-### Proposed contributions:
-
---
-1. Investigate location-dependent kernel mixtures. In particular, extend independent-copula proposals [(South et al, 2019)](https://doi.org/10.1214/18-BA1129) with location dependence to better explore the posterior tails.
-
---
-2. Investigate the mirror kernel for SMC.
-
---
-3. Investigate extensions of the mirror kernel for SMC.
-
----
-class: list-space
-
-## K-SMC tasks
-
-1. `r emo::ji("construction")` Further literature review of mixed-kernel methods in MCMC.
-2. `r emo::ji("construction")` Investigate mirror kernel for SMC.
-3. Detailed study of mixed-kernels in MCMC and SMC.
-4. `r emo::ji("construction")` Identify groups of kernels that complement their counterparts' weaknesses. 
-5. Write `R` code to implement SMC with mixtures (or cycles) of the identified groups of kernels.
-6. Identify then test specific applications where the mixed-kernels may better explore tails of the posterior.
-7. Write and submit paper "Locally-adaptive mutation kernels in sequential Monte Carlo"
-
----
-class: inverse, middle, center, hide-logo
-
-# D-SMC: (Approximate) likelihood gradients
-
----
-class: list-space
-
-## D-SMC: (Approximate) likelihood gradients
-
-.full-width[.content-box-red[
-**Aim**: Use approximate derivative information in SMC to guide mutation step.
-]]
-
---
-
-### Proposed contributions:
-
---
-1. Investigate current shortcomings of adaptive SMC mutation kernels using (approximate) derivative information
-
---
-2. Identify potential candidates for efficient (approximate) derivative-based mutation kernels. 
-
---
-3. Test these kernels, including an approximate version of the Hug and Hop kernel [(Ludkin & Sherlock, 2019)](https://arxiv.org/abs/1907.13570)
-
----
-class: list-space
-
-## D-SMC tasks
-
- 1. `r emo::ji("construction")` Further literature review of methods which use or could use approximate derivatives in MCMC and SMC.
- 2. `r emo::ji("construction")`  Identify or propose potential methods, e.g. approximate Hug and Hop kernel.
- 3. Write `R` code to implement methods.
- 4. Identify then test specific applications where these algorithms may reduce computation time or enable computation.
- 5. Write and submit paper "Efficient and derivative-free posterior analysis with sequential Monte Carlo".
-
----
-class: inverse, middle, center, hide-logo
-
-# Theory: Theoretical considerations
-
----
-class: list-space
-
-## Theory: Theoretical considerations
-
-.full-width[.content-box-red[
-**Aim**: Expand theoretical results on properties of adaptive SMC, particularly those using adaptive mutation kernels.
-]]
-
---
-
-### Proposed contributions:
-
---
-1. Investigate if guarantees available in the literature are applicable to SMC algorithm with adaptive mirror kernel. If not, try to extend these [(e.g. Beskos et al, 2016)](http://dx.doi.org/10.1214/15-AAP1113)  
-
---
-2. Investigate if guarantees are applicable to SMC with other adaptive mutation kernels used in the previous streams. If not, try to extend these guarantees.
-
----
-class: list-space
-
-## Theory tasks
-
-1. `r emo::ji("construction")` Literature review of current theoretical guarantees afforded to adaptive SMC algorithms.
-2. Identify adaptive SMC algorithms that are applicable or where progress is possible.
-3. Develop theory for adaptive SMC algorithms. Use SMC tuned mirror kernel as starting place.
-4. Write and submit paper "Guarantees for new adaptive Sequential Monte Carlo algorithms".
-
-
-
----
-
-## Timeline 1
-
-```{r pdf-convert, echo = F, eval = F}
-
-for(i in  1:3){
-pdftools::pdf_convert(paste0("imgs/latex-files/timeline-",i,"-1.pdf"), format = "png", dpi = 72, filenames = paste0("imgs/timeline-",i,"-1.png"))
-}
-
-```
-
-```{r timeline-1, echo=FALSE, eval=TRUE,  out.width = '95%'}
-knitr::include_graphics("imgs/timeline-1-1.png")
-
-```
----
-
-## Timeline 2
-
-```{r timeline-2, echo=FALSE, eval=TRUE,  out.width = '95%'}
-knitr::include_graphics("imgs/timeline-2-1.png")
-
-```
----
-
-## Timeline 3
-
-```{r timeline-3, echo=FALSE, eval=TRUE,  out.width = '95%'}
-knitr::include_graphics("imgs/timeline-3-1.png")
-
-```
----
-
-## Acknowledgements
-
-Many thanks to the panel:
-  
-- Distinguished Professor Kerrie Mengersen
-
-- A/Professor Christopher Drovandi
-
-- Professor Michael Milford
-
---
-
-Thank you to my supervisors:
-
-- A/Professor Christopher Drovandi
-
-- Professor Tony Pettitt
-
-- A/Professor Anthony Lee
-
---
-
-Heartfelt thanks must also go to:
-
-- School of Mathematical Science at QUT
-
-- ACEMS at QUT
-
-- ACEMS at other nodes
 
 ---
 class: middle, center

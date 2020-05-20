@@ -44,32 +44,22 @@ padding: 0.25cm;
 
 - Please save long questions until of end presentation.
 
-
----
-class: list-space, list-nobullet
-
-## Joint work
-
-A/Professor Christopher Drovandi, QUT and 
-
-A/Professor Anthony Lee, Bristol
-
 ---
 class: list-space
 
 ## Talk outline
 
-1. Overview
+1. Overview: Computational Bayesian inference &amp; SMC
 
-2. Computational Bayesian inference
+2. Tuning delayed-acceptance in SMC
 
-3. Sequential Monte Carlo
+3. Calibrating surrogate likelihoods in SMC
 
-4. Motivation and aims
+4. Surrogate first annealing strategy
 
-5. Research tasks and progress so far
+5. Simulation results 
 
-6. Timeline
+Joint work with **Christopher Drovandi** (QUT) and **Anthony Lee** (Bristol University)
 
 ---
 class: list-space
@@ -136,20 +126,29 @@ In practice we only require posterior distribution summaries
 `$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] = \int_{\Theta}f(\boldsymbol{\theta})p(\boldsymbol{\theta}~\vert~\boldsymbol{y})\text{d}\boldsymbol{\theta}$$`
 
 --
-For example
 
-- Mean: `\(\mathbb{E}_{p}[\boldsymbol{\theta}]\)`
-- Variance: `\(\mathbb{E}_{p}[\boldsymbol{\theta}^2] - \mathbb{E}_{p}[\boldsymbol{\theta}]^2\)`
-- Probabilities/Quantiles:  `\(\mathbb{E}_{p}[1(\boldsymbol{\theta} &lt;q)]\)`
+- Exact simulation
+
+    - Direct simulation
+    - Rejection sampling
+    
+--
+
+- Markov chain Monte Carlo (MCMC)
+
+    - Markov chain with invariant distribution equal to posterior
 
 --
 
-.full-width[.content-box-red[
-Monte Carlo techniques allow approximate posterior expectations with simulations
+- Importance sampling (IS)
 
-`$$\mathbb{E}_{p}[f(\boldsymbol{\theta})] \approx \frac{1}{N}\sum_{i=1}^{N}f(\boldsymbol{\theta}_{i}), \quad \boldsymbol{\theta}_{i} \sim p(\boldsymbol{\theta}~\vert~\boldsymbol{y})$$`
-]]
+    - Construct weighted samples to approximate posterior
 
+--
+
+- Sequential Monte Carlo (SMC)
+
+    - Iterative importance sampling + 🌶
 
 ---
 
@@ -241,7 +240,7 @@ To avoid particle degeneracy, after reweighting:
 
 .full-width[.content-box-red[
 🌶 **Refresh**: Mutate samples to avoid degeneracy in particles
-- Use MCMC kernels
+- Often use MCMC kernels
 ]]
     
 ---
@@ -253,127 +252,26 @@ Example SMC algorithm: Resample-move for static model
 ---
 class: inverse, center, middle, hide-logo
 
-# Motivation and aims
+# Using surrogate likelihoods in SMC:
 
----
+## Delayed-acceptance
 
-## Motivation
-
-.pull-left[
-.content-box-purple[
-**Sequential Monte Carlo**
-
-- A robust inferential tool
-- Multimodality, intractability, dynamic models 
-]
-.content-box-red[
-
-**But** there is still
-- Less development than competitors
-- Performance lags behind leading MCMC
-]
-]
-
---
-
-.pull-right[.content-box-purple[
-**Performance** depends on its components 
-
-- How well they adapt to a given problem
-- The mutation step of SMC is crucial
-]
-.content-box-red[
-Research on exploiting **SMC strengths**
-
-- Local adaptability 
-- Population of particles 
-]
-]
-
---
-
-🎶 **Better. Faster. Stronger.** 🎶
-
----
-
-
-## Research aims 
-
-.full-width[.content-box-purple[
-**Aims**
-
-- Develop computationally efficient SMC algorithms
-- Investigate and test new mutation kernels
-- Exploit the population of particles to tune mutation kernels
-]]
-
---
-
-.full-width[.content-box-red[
-**Research streams**
-
-- S-SMC: Surrogate likelihoods in SMC
-- K-SMC: Improving mutation kernels for SMC
-- D-SMC: SMC with (approximate) likelihood gradients
-- Theory: Theoretical considerations
-]]
-
----
-class: inverse, center, middle, hide-logo
-
-# S-SMC: Surrogate likelihoods in SMC
 
 ---
 class: list-space
+## Background: Delayed-acceptance
 
-## S-SMC: Surrogate likelihoods in SMC
+One option for the refresh (mutation) step in SMC is a Metropolis-Hastings kernel.
+
+1. Propose new location for particle from proposal distribution
+2. Calculate acceptance rate
+3. Accept/reject proposal
+
+--
 
 .full-width[.content-box-red[
-**Aim**: Utilise a surrogate likelihood in SMC when the model's likelihood is expensive
- to compute]]
-
---
-
-### Contributions:
-
---
-
-1. Tune delayed-acceptance kernel by optimising computation time
-
---
-2. Calibration surrogate likelihoods within SMC
-
---
-3. Surrogate first annealing strategy
-
----
-
-## Background: Metropolis-Hastings
-
-.full-width[.content-box-red[
-- MCMC method generates correlated posterior samples
-- No need for normalising constant (in most cases)
+**Computational cost**: Likelihood (posterior) evaluation at proposal.
 ]]
-
---
-
-1. **Propose** new location from `\(\boldsymbol{\theta}_{t-1}\)` using `\(\boldsymbol{\theta}_{t}^{\prime} \sim q(\boldsymbol{\theta}~\vert~\boldsymbol{\theta}_{t-1})\)`
-
---
-
-2. Calculate **acceptance probability** `$$\alpha = \min\left(1,\frac{p(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})q(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{\theta}_{t}^{\prime})}{p(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})q(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{\theta}_{t-1})} \right)$$`
-
---
-
-3. **Evaluate** proposal
-
-  (a) Reject: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}\)` with probability `\(1 - \alpha\)`, or
-  
-  (b) Accept: `\(\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t}^{\prime}\)` with probability `\(\alpha\)`
-
---
-
-Generally we use several MH cycles to diversify particles
 
 ---
 class: middle, center
@@ -438,7 +336,7 @@ where `\(\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})\)` is a cheap a
 
 ---
 
-## Background: Adaptive delayed-acceptance in SMC
+## Adaptive delayed-acceptance in SMC
 
 - The proposal distribution `\(q_{\phi}(\boldsymbol{\theta}^{\prime}~\vert~\boldsymbol{\theta})\)` has tuning parameters `\(\phi\)`.
 
@@ -460,7 +358,7 @@ where `\(\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})\)` is a cheap a
 
 ---
 
-## Background: Diversification criteria
+## Diversification criteria
 
 After resampling, particles are duplicated. One such criterion uses the median of the expected jumping distances [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924):
 
@@ -473,7 +371,7 @@ After resampling, particles are duplicated. One such criterion uses the median o
 
 ---
 
-## Contribution: Optimising computation time
+## Optimising computation time
 
 Model for expected computation time of `\(k\)` delayed-acceptance iterations
 
@@ -491,7 +389,7 @@ Model for expected computation time of `\(k\)` delayed-acceptance iterations
 
 ---
 
-## Contribution: Optimising computation time
+## Optimising computation time
 
 Solve the following approximately
 
@@ -520,7 +418,18 @@ With fixed, finite tuning parameter test set, e.g. `\(\phi \in \{0.1, 0.5, 1.0\}
 
 ---
 
-## Contribution: Calibrating the surrogate likelihood
+## Aside: Optimising computation time
+
+---
+class: inverse, center, middle, hide-logo
+
+# Using surrogate likelihoods in SMC:
+
+## Calibrating the surrogate likelihood
+
+---
+
+## Calibrating the surrogate likelihood
 
 .full-width[.content-box-red[
 **Key idea**: Use location history of the particles to calibrate the surrogate likelihood (better match the full likelihood).
@@ -540,15 +449,21 @@ With fixed, finite tuning parameter test set, e.g. `\(\phi \in \{0.1, 0.5, 1.0\}
 
 --
 
-- `\(d\)` is some discrepancy measure, e.g. squares difference of the log-likelihoods
+- `\(d\)` is some discrepancy measure, e.g. squared difference of the log-likelihoods
 
 --
 
 - Use a subset of the history, to reduce computational cost
 
+---
+class: inverse, center, middle, hide-logo
+
+# Using surrogate likelihoods in SMC:
+
+## Surrogate first annealing
 
 ---
-## Contribution: Surrogate first annealing
+## Surrogate first annealing
 
 .full-width[.content-box-red[
 **Key idea**:
@@ -571,7 +486,7 @@ Use two stages of annealing in SMC to eliminate unlikely particles early with lo
 
 ---
 class: list-space
-## S-SMC Contribution Recap
+## Recap
 
 Three strategies used:
 
@@ -611,7 +526,7 @@ Run simulation to test optimisation framework
 ---
 class: list-space
 
-## S-SMC Results: Overview
+## Results: Overview
 
 - DA+T+SFA had the best *computation* time improvements
    - speeding up the SMC by `\(1.90\times\)` to `\(6.95\times\)` compared to standard SMC. 
@@ -629,199 +544,22 @@ class: list-space
 
 ---
 
-## S-SMC Results: Efficiency
+## Results: Efficiency
 
 &lt;img src="index_files/figure-html/s-smc-eff-1.png" width="800px" height="500px" /&gt;
 ---
 exclude: true
 
-## S-SMC Results: Surrogate evaluations
+## Results: Surrogate evaluations
 
 &lt;img src="plots/surr-like-evals-2000-2020-02-13.png" width="90%" /&gt;
 
 ---
 
 
-## S-SMC Results: Example posterior comparisons
+## Results: Example posterior comparisons
 
 &lt;img src="index_files/figure-html/plot-post-1.png" width="800px" height="500px" /&gt;
-
----
-class: list-space
-
-## S-SMC tasks
-
-
-1. ✅ Conduct a further literature review of delayed-acceptance methods in MCMC, SMC, and ABC-SMC.
-2. ✅ Write `R` package to implement generic SMC algorithms.
-3. ✅ Write `R` and `C++` code to fit models often used to test delayed-acceptance-type algorithms. 
-4. ✅ Identify potential surrogate posteriors with possible tuning parameters, and tuning mechanism(s).
-5. ✅ Test these surrogates and tuning mechanism(s) across appropriate testing models.
-6. 🚧 Apply methods to computationally expensive time series models 
-7. 🚧 Finish and submit paper "Delayed-acceptance sequential Monte Carlo"
-
----
-class: inverse, middle, center, hide-logo
-
-# K-SMC: Improving mutation kernels for SMC
-
----
-class: list-space
-
-## K-SMC: Improving mutation kernels for SMC
-
-.full-width[.content-box-red[
-**Aim**: Use mutation kernels in SMC that preserve the relative probability of the particle locations.
-]]
-
---
-
-### Proposed contributions:
-
---
-1. Investigate location-dependent kernel mixtures. In particular, extend independent-copula proposals [(South et al, 2019)](https://doi.org/10.1214/18-BA1129) with location dependence to better explore the posterior tails.
-
---
-2. Investigate the mirror kernel for SMC.
-
---
-3. Investigate extensions of the mirror kernel for SMC.
-
----
-class: list-space
-
-## K-SMC tasks
-
-1. 🚧 Further literature review of mixed-kernel methods in MCMC.
-2. 🚧 Investigate mirror kernel for SMC.
-3. Detailed study of mixed-kernels in MCMC and SMC.
-4. 🚧 Identify groups of kernels that complement their counterparts' weaknesses. 
-5. Write `R` code to implement SMC with mixtures (or cycles) of the identified groups of kernels.
-6. Identify then test specific applications where the mixed-kernels may better explore tails of the posterior.
-7. Write and submit paper "Locally-adaptive mutation kernels in sequential Monte Carlo"
-
----
-class: inverse, middle, center, hide-logo
-
-# D-SMC: (Approximate) likelihood gradients
-
----
-class: list-space
-
-## D-SMC: (Approximate) likelihood gradients
-
-.full-width[.content-box-red[
-**Aim**: Use approximate derivative information in SMC to guide mutation step.
-]]
-
---
-
-### Proposed contributions:
-
---
-1. Investigate current shortcomings of adaptive SMC mutation kernels using (approximate) derivative information
-
---
-2. Identify potential candidates for efficient (approximate) derivative-based mutation kernels. 
-
---
-3. Test these kernels, including an approximate version of the Hug and Hop kernel [(Ludkin &amp; Sherlock, 2019)](https://arxiv.org/abs/1907.13570)
-
----
-class: list-space
-
-## D-SMC tasks
-
- 1. 🚧 Further literature review of methods which use or could use approximate derivatives in MCMC and SMC.
- 2. 🚧  Identify or propose potential methods, e.g. approximate Hug and Hop kernel.
- 3. Write `R` code to implement methods.
- 4. Identify then test specific applications where these algorithms may reduce computation time or enable computation.
- 5. Write and submit paper "Efficient and derivative-free posterior analysis with sequential Monte Carlo".
-
----
-class: inverse, middle, center, hide-logo
-
-# Theory: Theoretical considerations
-
----
-class: list-space
-
-## Theory: Theoretical considerations
-
-.full-width[.content-box-red[
-**Aim**: Expand theoretical results on properties of adaptive SMC, particularly those using adaptive mutation kernels.
-]]
-
---
-
-### Proposed contributions:
-
---
-1. Investigate if guarantees available in the literature are applicable to SMC algorithm with adaptive mirror kernel. If not, try to extend these [(e.g. Beskos et al, 2016)](http://dx.doi.org/10.1214/15-AAP1113)  
-
---
-2. Investigate if guarantees are applicable to SMC with other adaptive mutation kernels used in the previous streams. If not, try to extend these guarantees.
-
----
-class: list-space
-
-## Theory tasks
-
-1. 🚧 Literature review of current theoretical guarantees afforded to adaptive SMC algorithms.
-2. Identify adaptive SMC algorithms that are applicable or where progress is possible.
-3. Develop theory for adaptive SMC algorithms. Use SMC tuned mirror kernel as starting place.
-4. Write and submit paper "Guarantees for new adaptive Sequential Monte Carlo algorithms".
-
-
-
----
-
-## Timeline 1
-
-
-
-&lt;img src="imgs/timeline-1-1.png" width="95%" /&gt;
----
-
-## Timeline 2
-
-&lt;img src="imgs/timeline-2-1.png" width="95%" /&gt;
----
-
-## Timeline 3
-
-&lt;img src="imgs/timeline-3-1.png" width="95%" /&gt;
----
-
-## Acknowledgements
-
-Many thanks to the panel:
-  
-- Distinguished Professor Kerrie Mengersen
-
-- A/Professor Christopher Drovandi
-
-- Professor Michael Milford
-
---
-
-Thank you to my supervisors:
-
-- A/Professor Christopher Drovandi
-
-- Professor Tony Pettitt
-
-- A/Professor Anthony Lee
-
---
-
-Heartfelt thanks must also go to:
-
-- School of Mathematical Science at QUT
-
-- ACEMS at QUT
-
-- ACEMS at other nodes
 
 ---
 class: middle, center
