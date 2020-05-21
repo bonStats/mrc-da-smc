@@ -522,7 +522,7 @@ With fixed, finite tuning parameter test set, e.g. $\phi \in \{0.1, 0.5, 1.0\}$
 1. Run pilot mutation step to estimate:
 
     - $\hat{L}_{S}$, $\hat{L}_{F}$, $\widehat{\alpha^{(1)}}(\phi)$:
-    - Minimum $k_{\phi}$ using an "ESJD model" for $D(k,\boldsymbol{\phi})$ 
+    - Estimate minimum $\hat{k}_{\phi}$ using an "ESJD model" for $D(k,\boldsymbol{\phi})$ 
 --
 
 2. Find $\phi^{\star}$ using estimates from pilot run
@@ -552,6 +552,7 @@ For each $\boldsymbol{\phi} \in \Phi$ find minimum $k$ such that $D(k,\boldsymbo
 
 --
 
+
 - Median approximation: $k^{*}_{\boldsymbol{\phi}} = \min\left\{k \in \mathbb{Z}_{+}: k \times \text{median}\{J_{1}(\boldsymbol{\phi})\}\geq d \right\}$
 
 ---
@@ -573,7 +574,7 @@ $$
 Particular choices of $D(k,\boldsymbol{\phi})$ result in similar tuning strategies in the SMC literature:
 
 - Targeting $k$ via acceptance rates [(Drovandi et al, 2011)](https://doi.org/10.1016/j.csda.2011.03.019)
-- Target ting median ESJD across particles [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924)
+- Targeting median ESJD across particles [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924)
 
 ---
 class: inverse, center, middle, hide-logo
@@ -611,19 +612,27 @@ class: inverse, center, middle, hide-logo
 - Use a subset of the history, to reduce computational cost
 
 ---
-exclude: true
+exclude: false
 
 ## Calibrating the surrogate likelihood
 
-**2. Temperature weighting**
+**2. Weighted annealing**
+
+--
 
 For surrogate likelihoods that can be factorised
 
 - e.g. $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})$
 
+--
+
 - Let $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta},\boldsymbol{\omega}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})^{\omega_{i}}$
 
+--
+
 -  Find $$\boldsymbol{\omega}^{\star} = \min_{\boldsymbol{\omega}} \sum_{\boldsymbol{\theta} \in H(L)}d\left[ L(\boldsymbol{y}~\vert~\boldsymbol{\theta}), \tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}, \boldsymbol{\omega})\right] + \lambda \Vert\boldsymbol{\omega}\Vert_{1}$$
+
+--
 
 - If $d$ is squared difference of the log-likelihoods, this is equivalent to the standard Lasso
 
@@ -683,7 +692,7 @@ Run simulation to test optimisation framework
 
 - Ratio of full to surrogate cost: $\rho \in \{10^1,10^2,10^3,10^4,10^5,10^6\}$
 
-- Calibration using squared difference of surrogate and full log-likelihood (with regularisation)
+- Location-scale calibration using squared difference of surrogate and full log-likelihood (with regularisation)
 
 --
 
@@ -819,12 +828,12 @@ class: list-space
 
 --
 
-- Framework for tuning mutation kernels in SMC
+- A generic framework for tuning mutation kernels in SMC
 
 
 --
 
-- Surrogate likelihoods used in SMC
+- Uses of surrogate likelihoods used in SMC
 
     - Delayed-acceptance
     - Surrogate first annealing
@@ -836,7 +845,9 @@ class: list-space
 
 --
 
-- Working on Whittle likelihood time series application
+- Current work: Whittle likelihood time series application 
+
+    - Using weighted annealing calibration
 
 ---
 class: middle, center
