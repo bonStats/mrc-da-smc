@@ -353,7 +353,9 @@ After resampling, particles are duplicated. One such criterion uses the median o
 `$$D(k,\boldsymbol{\phi}) = \text{median}\left\{\sum_{s=1}^{k} J_{s}(\boldsymbol{\phi}) \right\}$$`
 - `\(k\)` is number of cycles in the mutation step
 
-- `\(J_{s}\)` is expected squared jumping distance (ESJD, [Pasarica and Gelman, 2010](www.jstor.org/stable/24308995)) (Mahalanobis distance)
+- `\(J_{s}\)` is expected squared jumping distance (ESJD, [Pasarica and Gelman, 2010](www.jstor.org/stable/24308995))
+
+- Use Mahalanobis distance if dimension &gt; 1
 
 - Helps to ensure a sufficient amount of diversification
 
@@ -445,8 +447,8 @@ $$
 
 Particular choices of `\(D(k,\boldsymbol{\phi})\)` result in similar tuning strategies in the SMC literature:
 
-- Targetting `\(k\)` via acceptance rates [(Drovandi et al, 2011)](https://doi.org/10.1016/j.csda.2011.03.019)
-- Targetting median ESJD across particles [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924)
+- Targeting `\(k\)` via acceptance rates [(Drovandi et al, 2011)](https://doi.org/10.1016/j.csda.2011.03.019)
+- Target ting median ESJD across particles [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924)
 
 ---
 class: inverse, center, middle, hide-logo
