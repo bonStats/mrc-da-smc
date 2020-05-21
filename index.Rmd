@@ -365,8 +365,6 @@ knitr::include_graphics("imgs/smc_algorithm.svg")
 ---
 class: inverse, center, middle, hide-logo
 
-# Using surrogate likelihoods in SMC:
-
 ## Delayed-acceptance
 
 
@@ -439,7 +437,7 @@ where $\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})$ is a cheap appro
 --
 
 4. If provisionally accepted, calculate **acceptance probability** (full) 
-   $$\alpha^{(2)} = \min\left(1,\frac{\tilde{p}(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})}{\tilde{p}(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})} \frac{p(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})}{p(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})}  \right)$$
+   $$\alpha^{(2)} = \min\left(1, \frac{p(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})}{p(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})} \frac{\tilde{p}(\boldsymbol{\theta}_{t-1}~\vert~\boldsymbol{y})}{\tilde{p}(\boldsymbol{\theta}_{t}^{\prime}~\vert~\boldsymbol{y})} \right)$$
 --
 
 5. **Evaluate** proposal (full) 
@@ -578,8 +576,6 @@ Particular choices of $D(k,\boldsymbol{\phi})$ result in similar tuning strategi
 ---
 class: inverse, center, middle, hide-logo
 
-# Using surrogate likelihoods in SMC:
-
 ## Calibrating the surrogate likelihood
 
 ---
@@ -613,32 +609,24 @@ class: inverse, center, middle, hide-logo
 - Use a subset of the history, to reduce computational cost
 
 ---
+exclude: true
+
 ## Calibrating the surrogate likelihood
 
 **2. Temperature weighting**
-
---
 
 For surrogate likelihoods that can be factorised
 
 - e.g. $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})$
 
---
-
 - Let $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta},\boldsymbol{\omega}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})^{\omega_{i}}$
 
---
-
 -  Find $$\boldsymbol{\omega}^{\star} = \min_{\boldsymbol{\omega}} \sum_{\boldsymbol{\theta} \in H(L)}d\left[ L(\boldsymbol{y}~\vert~\boldsymbol{\theta}), \tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}, \boldsymbol{\omega})\right] + \lambda \Vert\boldsymbol{\omega}\Vert_{1}$$
-
---
 
 - If $d$ is squared difference of the log-likelihoods, this is equivalent to the standard Lasso
 
 ---
 class: inverse, center, middle, hide-logo
-
-# Using surrogate likelihoods in SMC:
 
 ## Surrogate first annealing
 
@@ -757,7 +745,7 @@ eff_l_evals %>%
 
 ```
 ---
-exclude: true
+exclude: false
 
 ## Results: Surrogate evaluations
 
@@ -821,6 +809,32 @@ pdensity_ind %>% filter(bss_model == "median", n_particles == 2000, iter == it,
           legend.position = "bottom")
 
 ```
+
+---
+class: list-space
+
+## Conclusions
+
+--
+
+- Framework for tuning mutation kernels in SMC
+
+
+--
+
+- Surrogate likelihoods used in SMC
+
+    - Delayed-acceptance
+    - Surrogate first annealing
+
+--
+
+- Surrogate likelihood calibration
+
+
+--
+
+- Working on Whittle likelihood time series application
 
 ---
 class: middle, center
