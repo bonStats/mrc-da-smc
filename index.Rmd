@@ -153,20 +153,10 @@ facet_label_gamma <-  function(x){
 
 knitr::opts_chunk$set(cache = T)
 
-# TODO: Add tuning model details, add comp time aside, result of whittle
+# TODO: result of whittle, andrews comments
 
 ```
 
-## Housekeeping
-
-- Slides available at: https://bonstats.github.io/mrc-da-smc
-
-- I will try to monitor questions as I go, you can alert me in the chat.
-
-- Please save long questions until of end presentation.
-
----
-class: list-space
 
 ## Talk outline
 
@@ -367,7 +357,7 @@ To avoid particle degeneracy, after reweighting:
 ---
 class: hide-logo
 
-Example SMC algorithm: Resample-move for static model
+Example SMC algorithm: Resample-move for static models
 ```{r smc-alg, echo=FALSE, eval=TRUE, fig.align='center', out.width= 650}
 knitr::include_graphics("imgs/smc_algorithm.svg")
 ```
@@ -490,7 +480,7 @@ After resampling, particles are duplicated. One such criterion uses the median o
 $$D(k,\boldsymbol{\phi}) = \text{median}\left\{\sum_{s=1}^{k} J_{s}(\boldsymbol{\phi}) \right\}$$
 - $k$ is number of cycles in the mutation step
 
-- $J_{s}$ is expected squared jumping distance (ESJD) (Mahalanobis distance)
+- $J_{s}$ is expected squared jumping distance (ESJD, [Pasarica and Gelman, 2010](www.jstor.org/stable/24308995)) (Mahalanobis distance)
 
 - Helps to ensure a sufficient amount of diversification
 
@@ -532,7 +522,7 @@ With fixed, finite tuning parameter test set, e.g. $\phi \in \{0.1, 0.5, 1.0\}$
 1. Run pilot mutation step to estimate:
 
     - $\hat{L}_{S}$, $\hat{L}_{F}$, $\widehat{\alpha^{(1)}}(\phi)$:
-    - Minimum $k_{\phi}$ using a model for $D(k,\boldsymbol{\phi})$ (median inequality or Gamma distribution)
+    - Minimum $k_{\phi}$ using an "ESJD model" for $D(k,\boldsymbol{\phi})$ 
 --
 
 2. Find $\phi^{\star}$ using estimates from pilot run
@@ -542,6 +532,30 @@ With fixed, finite tuning parameter test set, e.g. $\phi \in \{0.1, 0.5, 1.0\}$
 3. Run mutation steps until diversification criterion threshold is met
 
 ---
+class: list-space
+
+## Models for ESJD 
+
+The pilot run ESJD are used to determine the minimum number of kernel cycles required.
+
+$$D(k,\boldsymbol{\phi}) = \text{median}\left\{\sum_{s=1}^{k} J_{s}(\boldsymbol{\phi}) \right\}$$
+
+For each $\boldsymbol{\phi} \in \Phi$ find minimum $k$ such that $D(k,\boldsymbol{\phi}) > d$.
+
+--
+
+**Models for total ESJD**
+
+--
+
+- Gamma assumption: $\sum_{s=1}^{k} J_{s}(\boldsymbol{\phi}) \sim \text{Gamma}(k\widehat{a_{\boldsymbol{\phi}}},\widehat{b_{\boldsymbol{\phi}}})$
+
+--
+
+- Median approximation: $k^{*}_{\boldsymbol{\phi}} = \min\left\{k \in \mathbb{Z}_{+}: k \times \text{median}\{J_{1}(\boldsymbol{\phi})\}\geq d \right\}$
+
+---
+class: list-space
 
 ## Aside: Optimising computation time
 
@@ -550,7 +564,16 @@ Using the same optimisation strategy,
 $$\arg \min_{\boldsymbol{\phi}} C(k,\boldsymbol{\phi})$$
 $$\text{such that } D(k,\boldsymbol{\phi}) > d,$$
 
-in the context of standard Metropolis-Hastings can justify some of the tuning strategies in the literature.
+in the context of standard Metropolis-Hastings 
+
+$$
+C(k,\boldsymbol{\phi}) = k L_{F}
+$$
+
+Particular choices of $D(k,\boldsymbol{\phi})$ result in similar tuning strategies in the SMC literature:
+
+- Targetting $k$ via acceptance rates [(Drovandi et al, 2011)](https://doi.org/10.1016/j.csda.2011.03.019)
+- Targetting median ESJD across particles [(Salomone et al, 2018)](https://arxiv.org/abs/1805.03924)
 
 ---
 class: inverse, center, middle, hide-logo
@@ -569,7 +592,7 @@ class: inverse, center, middle, hide-logo
 
 --
 
-**Location-scale transformation**
+**1. Location-scale transformation**
 
 - Take $T_{\boldsymbol{\xi}}$, a pre-specified transformation with parameters $\boldsymbol{\xi}$
 
@@ -592,15 +615,23 @@ class: inverse, center, middle, hide-logo
 ---
 ## Calibrating the surrogate likelihood
 
-**Temperature weighting**
+**2. Temperature weighting**
+
+--
 
 For surrogate likelihoods that can be factorised
 
 - e.g. $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})$
 
+--
+
 - Let $\tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta},\boldsymbol{\omega}) = \prod_{i=1}^{n} \tilde{p}(y_{i}~\vert~\boldsymbol{\theta})^{\omega_{i}}$
 
+--
+
 -  Find $$\boldsymbol{\omega}^{\star} = \min_{\boldsymbol{\omega}} \sum_{\boldsymbol{\theta} \in H(L)}d\left[ L(\boldsymbol{y}~\vert~\boldsymbol{\theta}), \tilde{L}(\boldsymbol{y}~\vert~\boldsymbol{\theta}, \boldsymbol{\omega})\right] + \lambda \Vert\boldsymbol{\omega}\Vert_{1}$$
+
+--
 
 - If $d$ is squared difference of the log-likelihoods, this is equivalent to the standard Lasso
 
@@ -720,7 +751,7 @@ eff_l_evals %>%
                      guide = guide_legend(ncol = 1)) +
   facet_grid(likelihood ~ bss_model, labeller = flabeller, scales = "free_y") +
   xlab(expression("Likelihood cost ratio"~ (rho))) +
-  ylab("Efficiency (MSE x SLE)") +
+  ylab("MSE x SLE") +
   theme_bw(base_size=25) + theme(legend.title = NULL)
 
 
