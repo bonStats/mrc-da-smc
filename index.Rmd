@@ -444,7 +444,7 @@ where $\tilde{p}(\boldsymbol{\theta}_{t}~\vert~\boldsymbol{y})$ is a cheap appro
 
   (a) Reject: $\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}$ with probability $1 - \alpha^{(2)}$, or
 
-  (b) Accept: $\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t-1}$ with probability $\alpha^{(2)}$
+  (b) Accept: $\boldsymbol{\theta}_{t} \leftarrow \boldsymbol{\theta}_{t}^{\prime}$ with probability $\alpha^{(2)}$
 
 
 ---
